@@ -13,6 +13,7 @@ type Game struct {
 	leftButtonPressed bool
 	Loader            *resource.Loader
 	Images            []*Item
+	Data              *GameD
 	DraggingIndex     int
 	Grid              []Grid
 	Menu              *Menu

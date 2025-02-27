@@ -37,46 +37,50 @@ func createLoader() *resource.Loader {
 
 func main() {
 	loader := createLoader()
-	assets.RegisterResources(loader) // Регистрируем ресурсы
+	assets.RegisterResources(loader)
 
-	// Пытаемся загрузить данные пользователя
-	var err error
-	user, err = game.LoadUser()
-	if err != nil {
-		if os.IsNotExist(err) {
-			log.Println("Файл пользователя не найден, создаем нового пользователя")
-			menuActive = true   // Активируем меню для ввода имени
-			user = &game.User{} // Создаем нового пользователя
-		} else {
-			log.Fatal("Ошибка при загрузке данных пользователя:", err)
-		}
+	menu := game.NewMenu(loader, screenWidth, screenHeight)
+	log.Println(menu)
+	// Основной цикл меню
+	var currentUser *game.User
+	currentUser = menu.Update()
+
+	// После выхода из цикла меню
+	if currentUser != nil {
+		log.Println("Выбран пользователь:", currentUser.Name)
+		// Логика работы с выбранным пользователем
+	} else {
+		log.Println("Пользователь не выбран.")
 	}
 
-	// Создаем меню и передаем данные пользователя и размеры экрана
-	menu := game.NewMenu(loader, user, screenWidth, screenHeight)
+	gameData, err := game.Load(currentUser.ID)
+	if err != nil {
+		if os.IsNotExist(err) {
+			log.Println("Сохранение не найдено, создаем новую игру")
+			gameData = &game.GameD{
+				User:   *currentUser,
+				Images: []*game.Item{},
+				Grid:   game.CreateGrid(),
+			}
+		} else {
+			log.Fatal("Ошибка при загрузке игры:", err)
+		}
+	}
+	menuActive = true
+	// Загружаем игру для выбранного пользователя
+	//if currentUser == nil {
+	//	log.Println("gege")
+	//}
 
 	g := &game.Game{
 		Loader:          loader,
-		Images:          []*game.Item{},
-		DraggingIndex:   -1,
-		Grid:            game.CreateGrid(),
+		Data:            gameData,
 		BackgroundImage: loader.LoadImage(assets.ImageBackground).Data,
 		Menu:            menu,
-		User:            user,
 	}
 
 	ebiten.SetWindowSize(screenWidth, screenHeight)
 	ebiten.SetWindowTitle("Merge-2 Game")
-
-	// Загружаем сохраненные данные (если файл существует)
-	if err := g.LoadGame("save.json"); err != nil {
-		if os.IsNotExist(err) {
-			log.Println("Файл сохранения не найден, создаем новую игру")
-			if err := g.LoadGame("save_start.json"); err != nil {
-				log.Println("Не удалось создать новую игру")
-			}
-		}
-	}
 
 	// Запускаем игру
 	if err := ebiten.RunGame(g); err != nil {
@@ -84,7 +88,7 @@ func main() {
 	}
 
 	// Сохраняем данные при завершении программы
-	if err := g.SaveGame("save.json"); err != nil {
+	if err := game.SaveG(currentUser.ID, g.Data); err != nil {
 		log.Println("Ошибка при сохранении игры:", err)
 	}
 }
