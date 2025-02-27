@@ -10,13 +10,13 @@ import (
 var gameAssets embed.FS
 
 func OpenAsset(path string) io.ReadCloser {
-	f, err := gameAssets.Open("_data/images/" + path) // Указываем полный путь
+	f, err := gameAssets.Open(path) // Указываем полный путь
 	if err != nil {
-		panic("cant open asset")
+		panic("cant open asset: " + err.Error()) // Добавляем информацию об ошибке
 	}
 	return f
 }
-
 func RegisterResources(loader *resource.Loader) {
 	registerImageResources(loader)
+	RegisterResource(loader)
 }

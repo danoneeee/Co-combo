@@ -15,11 +15,16 @@ type Game struct {
 	Images            []*Item
 	DraggingIndex     int
 	Grid              []Grid
+	Menu              *Menu
 	User              *User
 	BackgroundImage   *ebiten.Image // Фоновое изображение
 }
 
 func (g *Game) Update() error {
+	if g.Menu.Active {
+		g.Menu.Update()
+		return nil
+	}
 	// Логика обновления игры
 	g.cursorX, g.cursorY = ebiten.CursorPosition()
 
@@ -104,6 +109,10 @@ func (g *Game) Update() error {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
+	if g.Menu.Active {
+		g.Menu.Draw(screen)
+		return
+	}
 	// screen.Fill(color.RGBA{R: 130, G: 155, B: 175, A: 255})
 	if g.BackgroundImage != nil {
 		screen.DrawImage(g.BackgroundImage, &ebiten.DrawImageOptions{})
